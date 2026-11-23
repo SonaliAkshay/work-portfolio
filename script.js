@@ -437,69 +437,69 @@ function initBackToTop() {
 // ================================
 // CONTACT FORM
 // ================================
-function initContactForm() {
-  const form = document.getElementById("contactForm");
-  const formMessage = document.getElementById("formMessage");
-  if (!form) return;
+// function initContactForm() {
+//   const form = document.getElementById("contactForm");
+//   const formMessage = document.getElementById("formMessage");
+//   if (!form) return;
 
-  // Float labels on select fields when a value is chosen
-  form.querySelectorAll("select").forEach((select) => {
-    function updateSelectLabel() {
-      const label = select.nextElementSibling;
-      if (!label || label.tagName !== "LABEL") return;
-      if (select.value && select.value !== "") {
-        label.classList.add("floated");
-      } else {
-        label.classList.remove("floated");
-      }
-    }
-    select.addEventListener("change", updateSelectLabel);
-    updateSelectLabel();
-  });
+//   // Float labels on select fields when a value is chosen
+//   form.querySelectorAll("select").forEach((select) => {
+//     function updateSelectLabel() {
+//       const label = select.nextElementSibling;
+//       if (!label || label.tagName !== "LABEL") return;
+//       if (select.value && select.value !== "") {
+//         label.classList.add("floated");
+//       } else {
+//         label.classList.remove("floated");
+//       }
+//     }
+//     select.addEventListener("change", updateSelectLabel);
+//     updateSelectLabel();
+//   });
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const originalHTML = submitBtn.innerHTML;
+//   form.addEventListener("submit", async (e) => {
+//     e.preventDefault();
+//     const submitBtn = form.querySelector('button[type="submit"]');
+//     const originalHTML = submitBtn.innerHTML;
 
-    submitBtn.innerHTML =
-      '<span>Sending...</span><i class="fas fa-circle-notch fa-spin"></i>';
-    submitBtn.disabled = true;
+//     submitBtn.innerHTML =
+//       '<span>Sending...</span><i class="fas fa-circle-notch fa-spin"></i>';
+//     submitBtn.disabled = true;
 
-    try {
-      const response = await fetch(form.action, {
-        method: "POST",
-        body: new FormData(form),
-        headers: { Accept: "application/json" },
-      });
+//     try {
+//       const response = await fetch(form.action, {
+//         method: "POST",
+//         body: new FormData(form),
+//         headers: { Accept: "application/json" },
+//       });
 
-      if (response.ok) {
-        formMessage.textContent =
-          "Message sent! I'll get back to you within 24 hours.";
-        formMessage.className = "form-message success";
-        form.reset();
-        // Reset select labels
-        form.querySelectorAll("select").forEach((s) => {
-          const l = s.nextElementSibling;
-          if (l && l.tagName === "LABEL") l.classList.remove("floated");
-        });
-      } else {
-        throw new Error("Send failed");
-      }
-    } catch {
-      formMessage.textContent =
-        "Something went wrong. Please try again or email me directly.";
-      formMessage.className = "form-message error";
-    } finally {
-      submitBtn.innerHTML = originalHTML;
-      submitBtn.disabled = false;
-      setTimeout(() => {
-        formMessage.className = "form-message";
-        formMessage.textContent = "";
-      }, 6000);
-    }
-  });
-}
+//       if (response.ok) {
+//         formMessage.textContent =
+//           "Message sent! I'll get back to you within 24 hours.";
+//         formMessage.className = "form-message success";
+//         form.reset();
+//         // Reset select labels
+//         form.querySelectorAll("select").forEach((s) => {
+//           const l = s.nextElementSibling;
+//           if (l && l.tagName === "LABEL") l.classList.remove("floated");
+//         });
+//       } else {
+//         throw new Error("Send failed");
+//       }
+//     } catch {
+//       formMessage.textContent =
+//         "Something went wrong. Please try again or email me directly.";
+//       formMessage.className = "form-message error";
+//     } finally {
+//       submitBtn.innerHTML = originalHTML;
+//       submitBtn.disabled = false;
+//       setTimeout(() => {
+//         formMessage.className = "form-message";
+//         formMessage.textContent = "";
+//       }, 6000);
+//     }
+//   });
+// }
 
 // ================================
 // CURRENT YEAR
@@ -511,43 +511,112 @@ function setCurrentYear() {
 
 //email send
 
-const contactForm = document.getElementById("contactForm");
-const formMessage = document.getElementById("formMessage");
-const submitBtn = document.getElementById("submitBtn");
+function initContactForm() {
+  const form = document.getElementById("contactForm");
+  const formMessage = document.getElementById("formMessage");
 
-contactForm.addEventListener("submit", async function (event) {
-  event.preventDefault();
+  if (!form || !formMessage) return;
 
-  submitBtn.disabled = true;
-  submitBtn.querySelector("span").textContent = "Sending...";
+  // Initialize EmailJS
+  emailjs.init({
+    publicKey: "h0MwbiUaf9xLrUDPY",
+  });
 
-  const formData = {
-    name: contactForm.name.value,
-    email: contactForm.email.value,
-    service: contactForm.service.value,
-    budget: contactForm.budget.value,
-    message: contactForm.message.value,
-  };
+  // Floating labels for select fields
+  form.querySelectorAll("select").forEach((select) => {
+    function updateSelectLabel() {
+      const label = select.nextElementSibling;
 
-  try {
-    // Email notification to freelancer
-    await emailjs.send("service_vfu6mzq", "template_2n0uipi", formData);
+      if (!label || label.tagName !== "LABEL") return;
 
-    // Confirmation email to client
-    await emailjs.send("service_vfu6mzq", "template_c55ejd3", formData);
+      label.classList.toggle("floated", select.value !== "");
+    }
 
-    formMessage.textContent =
-      "Thank you! Your message has been sent successfully.";
-    formMessage.style.color = "green";
+    select.addEventListener("change", updateSelectLabel);
+    updateSelectLabel();
+  });
 
-    contactForm.reset();
-  } catch (error) {
-    console.error(error);
+  // Handle form submission
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-    formMessage.textContent = "Something went wrong. Please try again.";
-    formMessage.style.color = "red";
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.querySelector("span").textContent = "Send Message";
-  }
-});
+    const submitBtn = form.querySelector('button[type="submit"]');
+
+    if (submitBtn.disabled) return;
+
+    const originalHTML = submitBtn.innerHTML;
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML =
+      '<span>Sending...</span><i class="fas fa-circle-notch fa-spin"></i>';
+
+    formMessage.textContent = "";
+
+    const templateParams = {
+      name: form.elements.name.value.trim(),
+      email: form.elements.email.value.trim(),
+      service: form.elements.service.value,
+      budget: form.elements.budget.value,
+      message: form.elements.message.value.trim(),
+    };
+
+    try {
+      // Send notification to freelancer
+      const freelancerResponse = await emailjs.send(
+        "service_vfu6mzq",
+        "template_2n0uipi",
+        templateParams,
+      );
+
+      console.log("Freelancer email sent:", freelancerResponse);
+
+      // Send confirmation to client
+      const clientResponse = await emailjs.send(
+        "service_vfu6mzq",
+        "template_c55ejd3",
+        templateParams,
+      );
+
+      console.log("Client confirmation sent:", clientResponse);
+
+      formMessage.textContent =
+        "Message sent successfully! I'll get back to you within 24 hours.";
+
+      formMessage.className = "form-message success";
+
+      form.reset();
+
+      // Reset floating select labels
+      form.querySelectorAll("select").forEach((select) => {
+        const label = select.nextElementSibling;
+
+        if (label && label.tagName === "LABEL") {
+          label.classList.remove("floated");
+        }
+      });
+    } catch (error) {
+      console.error("EmailJS submission error:", error);
+
+      formMessage.textContent =
+        "Something went wrong. Please try again or email me directly.";
+
+      formMessage.className = "form-message error";
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalHTML;
+    }
+
+    // Clear feedback after 6 seconds
+    setTimeout(() => {
+      formMessage.className = "form-message";
+      formMessage.textContent = "";
+    }, 6000);
+  });
+}
+
+// Initialize contact form
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initContactForm);
+} else {
+  initContactForm();
+}
